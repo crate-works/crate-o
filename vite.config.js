@@ -42,10 +42,21 @@ const build = {
 }
 const ejsRenderer = await createRenderer();
 const nunjucksRenderer = await createNunjucksRenderer();
+const disableMaspCliEntrypoint = {
+  name: 'disable-masp-cli-entrypoint',
+  enforce: 'pre',
+  transform(code, id) {
+    if (!id.includes('/ro-crate-maps/lib/masp-validator.js')) {
+      return null;
+    }
+    return code.replace('if (require.main === module) {', 'if (false && require.main === module) {');
+  }
+};
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   plugins: [
+    disableMaspCliEntrypoint,
     ejsRenderer,
     nunjucksRenderer,
     visualizer(),
