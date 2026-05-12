@@ -1,12 +1,8 @@
-<!---Start--->
+# Crate-O BETA
 
-# Crate-O
+NOTE: BETA VERSION: This is a new version of Crate-O which uses [RO-Crate Machine Actionable Schemas and Profiles](https://github.com/Language-Research-Technology/ro-crate-masp/) to configure 
 
-<!---End--->
-
-Status: Crate-O is now usable in Chromium-based browsers (Chrome, and Microsoft Edge work) - you can try it [here](https://language-research-technology.github.io/crate-o/), please report bugs using GitHub issues in this repository.
-
-<!---Start--->
+==
 
 Crate-O is a browser-based editor for Research Object Crates [(RO-Crate)](https://www.researchobject.org/ro-crate/). RO-Crate is a flexible, developer-friendly approach to linked-data description and packaging. Crate-O is designed to:
 
@@ -14,9 +10,7 @@ Crate-O is a browser-based editor for Research Object Crates [(RO-Crate)](https:
 - optionally skip the files and describe abstract contextual entities such as in a Cultural Collection or an encyclopaedia
 - annotate existing resources elsewhere on the web
 - import bulk metadata from an Excel spreadsheet.
-<!---End--->
 
-<!---Start--->
 
 NOTE: Crate-O is for Google Chrome and related browsers ONLY at this stage as it describes files on the user's computer, and saves RO-Crate metadata there. We will be releasing a version that can be deployed as part of a service that accesses online resources directly, which will be compatible with other browsers (see the [Roadmap](https://github.com/Language-Research-Technology/crate-o#roadmap--backlog)).
 
@@ -24,7 +18,6 @@ While the current version of Crate-O is designed for editing self-contained RO-C
 
 Crate-O is currently developed by the Language Data Commons of Australia ([LDaCA](https://www.ldaca.edu.au/)), under the guidance of Peter Sefton as technical lead. If the tool is adopted in other contexts (we are in talks with a few groups about this) then we aim to establish a steering committee / reference group to help guide development.
 
-<!---End--->
 
 # Developer Documentation
 
