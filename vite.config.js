@@ -18,7 +18,7 @@ const build = {
   _all: {
     rollupOptions: {},
     commonjsOptions: {
-      include: [/ro-crate-excel/, /ro-crate-masp/, /node_modules/],
+      include: [/ro-crate-excel/, /ro-crate-maps/, /node_modules/],
       transformMixedEsModules: true
     },
   },
