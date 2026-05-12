@@ -281,8 +281,8 @@ const commands = {
   loadProfile() {
     data.showDialog = true;
     data.dialogContent = null;
-    data.dialogTitle = 'Local MASP profiles only';
-    data.modeError = [{ message: 'This build loads MASP profile-crates from the local ro-crate-masp workspace only.' }];
+    data.dialogTitle = 'Profile loading is URL-configured';
+    data.modeError = [{ message: 'This build uses MASP profile-crates from configured URLs (see crate-o-masp-config.json).' }];
   },
 
   async open() {

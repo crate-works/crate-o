@@ -54,5 +54,3 @@ This version of Crate-O uses[RO-Crate Machine Actionable Schemas and Profiles](h
 [Arkisto]: https://arkisto-platform.github.io/
 [Data Packs]: https://github.com/describo/data-packs
 [RO-Crate Excel]: https://github.com/Language-Research-Technology/ro-crate-excel
-
-1. Verhoeven D, Burrows T. Aggregating Cultural Heritage Data for Research Use: the Humanities Networked Infrastructure (HuNI). In: Garoufallou E, Hartley RJ, Gaitanou P, editors. Metadata and Semantics Research. Cham: Springer International Publishing; 2015. p. 417–23. (Communications in Computer and Information Science).

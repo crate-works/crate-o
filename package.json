@@ -61,7 +61,7 @@
     "marked": "^15.0.7",
     "mime": "^4.0.1",
     "ro-crate": "^3.5.1",
-    "ro-crate-maps": "file:../ro-crate-masp"
+    "ro-crate-maps": "github:Language-Research-Technology/ro-crate-maps"
   },
   "peerDependencies": {
     "element-plus": "^2.10.4",
