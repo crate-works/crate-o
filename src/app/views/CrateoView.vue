@@ -50,6 +50,15 @@ function looksLikeHttpUrl(value) {
 }
 
 function deriveProfileDocumentationUrl(metadata = {}, profile = null) {
+  const explicitProfileDocsByName = {
+    'Language Data Commons (LDAC)': 'https://w3id.org/ldac/profile#Collection'
+  };
+
+  const explicitByName = explicitProfileDocsByName[metadata?.name];
+  if (explicitByName) {
+    return explicitByName;
+  }
+
   const candidates = [
     metadata.url,
     metadata.documentationUrl,
@@ -58,9 +67,9 @@ function deriveProfileDocumentationUrl(metadata = {}, profile = null) {
     metadata.description
   ];
 
-  // Fallback from conformsTo profile id, e.g. .../profile-crate/#profile -> .../profile-crate/
+  // Fallback from conformsTo profile id, e.g. .../profile-crate/#profile or .../profile#profile
   const fallbackConformsTo = profile?.getConformsToUris?.()
-    ?.find((uri) => typeof uri === 'string' && uri.includes('/profile-crate/'));
+    ?.find((uri) => typeof uri === 'string' && /^https?:\/\//i.test(uri));
   if (fallbackConformsTo) {
     candidates.push(fallbackConformsTo);
   }
@@ -72,7 +81,9 @@ function deriveProfileDocumentationUrl(metadata = {}, profile = null) {
     try {
       const url = new URL(candidate);
       url.search = '';
-      url.hash = '';
+      if (url.hash === '#profile') {
+        url.hash = '';
+      }
       url.pathname = url.pathname
         .replace(/\/ro-crate-metadata\.jsonld?$/i, '/')
         .replace(/\/#profile$/i, '/')
