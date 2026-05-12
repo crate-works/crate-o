@@ -24,9 +24,9 @@ import { ElRow, ElCol } from 'element-plus';
     <p></p><br />
     <h2 class="mb-3 text-lg md:text-xl">General Navigation</h2>
     <ul class="list-disc list-outside pl-5">
-      <li><strong>Mode</strong> shows a list of predefined modes or allows you to load one from your computer.</li>
+      <li><strong>Profile</strong> shows a list of predefined profiles or allows you to load one from your computer.</li>
       <li><strong>Selected Directory</strong> shows the directory or folder you currently have open.</li>
-      <li>Below <strong>Mode</strong>, you will see a home icon followed by a file path that indicates
+      <li>Below <strong>Profile</strong>, you will see a home icon followed by a file path that indicates
         where you are located in the collection levels. This will change as you navigate to different sublevels.</li>
       <li>Depending on the metadata group, different types of metadata will be available:
         <ul class="list-disc list-outside pl-5">

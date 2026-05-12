@@ -27,7 +27,7 @@ Load Files | Loads files from the selected directory into this RO-Crate.
 Bulk Add | Select a spreadsheet from a different directory to assist you with metadata description. This will append to your existing RO-Crate if there is already one created.
 Save | Save the state of this page into your RO-Crate. This will create an _ro-crate-metadata.json_ file or append data into an existing _ro-crate-metadata.json_.
 Close | Closes without saving.
-Mode | Select a predefined mode or load one from your computer.
+Profile | Select a predefined profile or load one from your computer.
 
 <br>
 

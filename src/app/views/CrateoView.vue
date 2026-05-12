@@ -45,6 +45,54 @@ function profileMeta(profile) {
   return profile?.getProfileMetadata ? profile.getProfileMetadata() : (profile?.metadata || {});
 }
 
+function looksLikeHttpUrl(value) {
+  return typeof value === 'string' && /^https?:\/\//i.test(value);
+}
+
+function deriveProfileDocumentationUrl(metadata = {}, profile = null) {
+  const candidates = [
+    metadata.url,
+    metadata.documentationUrl,
+    metadata.profileUrl,
+    metadata.sourceUrl,
+    metadata.description
+  ];
+
+  // Fallback from conformsTo profile id, e.g. .../profile-crate/#profile -> .../profile-crate/
+  const fallbackConformsTo = profile?.getConformsToUris?.()
+    ?.find((uri) => typeof uri === 'string' && uri.includes('/profile-crate/'));
+  if (fallbackConformsTo) {
+    candidates.push(fallbackConformsTo);
+  }
+
+  for (const candidate of candidates) {
+    if (!looksLikeHttpUrl(candidate)) {
+      continue;
+    }
+    try {
+      const url = new URL(candidate);
+      url.search = '';
+      url.hash = '';
+      url.pathname = url.pathname
+        .replace(/\/ro-crate-metadata\.jsonld?$/i, '/')
+        .replace(/\/#profile$/i, '/')
+        .replace(/#profile$/i, '/');
+      return url.toString();
+    } catch (_error) {
+      continue;
+    }
+  }
+
+  return '';
+}
+
+function openProfileDocumentation(url) {
+  if (!looksLikeHttpUrl(url)) {
+    return;
+  }
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
+
 const data = shallowReactive({
   /** @type {?FileSystemDirectoryHandle} */
   dirHandle: null,
@@ -53,8 +101,8 @@ const data = shallowReactive({
   crate: null,
   entityId: '',
   propertyId: '',
-  selectedProfile: null,
-  selectedProfileSource: 'none',
+  selectedProfile: defaultProfileName,
+  selectedProfileSource: 'auto-default',
   profilePickerInteracted: false,
   profileLoading: false,
   profileLoadingName: '',
@@ -84,8 +132,21 @@ const profileOptions = computed(() => data.profiles.flatMap((p) => {
   if (hiddenProfileNames.has(metadata.name)) {
     return [];
   }
-  return p ? [{ value: metadata.name, label: metadata.name, description: metadata.description }] : [];
+  return p ? [{
+    value: metadata.name,
+    label: metadata.name,
+    description: metadata.description,
+    documentationUrl: deriveProfileDocumentationUrl(metadata, p)
+  }] : [];
 }));
+
+const selectedProfileDocumentationUrl = computed(() => {
+  const resolvedProfile = profile.value;
+  if (!resolvedProfile) {
+    return '';
+  }
+  return deriveProfileDocumentationUrl(profileMeta(resolvedProfile), resolvedProfile);
+});
 
 const metadataDescriptorRuleIds = computed(() => {
   const flags = data.validationResult?.ruleFlags || {};
@@ -450,8 +511,8 @@ function resetData() {
   data.entityId = '';
   //data.selectedProfile = defaultProfile;
   //data.profiles = shallowReactive(profiles);
-  data.selectedProfile = null;
-  data.selectedProfileSource = 'none';
+  data.selectedProfile = defaultProfileName;
+  data.selectedProfileSource = 'auto-default';
   data.profilePickerInteracted = false;
   data.spreadSheetBuffer = null;
   data.autoDetectedProfileKey = null;
@@ -820,7 +881,8 @@ watch(() => data.profiles, (profiles) => {
     </el-menu>
     <el-row class="text-large py-3">
       <el-col :sm="24" :md="18" class="pl-3">
-        <el-select-v2 v-model="data.selectedProfile" @change="handleProfileChange" @visible-change="handleProfileVisibilityChange" class="w-[30em]" :disabled="!data.dirHandle" scrollbar-always-on
+        <div class="flex items-center gap-2">
+          <el-select-v2 v-model="data.selectedProfile" @change="handleProfileChange" @visible-change="handleProfileVisibilityChange" class="w-[30em]" :disabled="!data.dirHandle" scrollbar-always-on
           placeholder="Open a directory first to select a mode" :options="profileOptions" :height="290"
           :item-height="58">
           <template #prefix>
@@ -834,9 +896,21 @@ watch(() => data.profiles, (profiles) => {
             <div class="border-b-1 mb-2" v-if="item" :title="item.description">
               <p>{{ item.label }}</p>
               <p class="text-slate-500 text-xs truncate">{{ item.description }}</p>
+              <p v-if="item.documentationUrl" class="text-xs mt-1">
+                <el-button link type="primary" size="small" @click.stop="openProfileDocumentation(item.documentationUrl)">[Documentation]</el-button>
+              </p>
             </div>
           </template>
-        </el-select-v2>
+          </el-select-v2>
+          <el-button
+            v-if="selectedProfileDocumentationUrl"
+            link
+            type="primary"
+            size="small"
+            @click="openProfileDocumentation(selectedProfileDocumentationUrl)">
+            [Documentation]
+          </el-button>
+        </div>
       </el-col>
       <el-col v-if="data.dirHandle" :sm="24" :md="6" class="content-center pl-3">
         <span class="font-bold text-slate-500">Selected Directory: </span>
