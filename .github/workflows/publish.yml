@@ -1,7 +1,7 @@
 # Publish web app to github pages
 name: Publish
 
-on: 
+on:
   push:
     branches: [master, main]
 
@@ -16,16 +16,6 @@ jobs:
         with:
           node-version: 24
           registry-url: 'https://registry.npmjs.org'
-      - uses: ButlerLogic/action-autotag@1.1.2
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-        with:
-          tag_prefix: "v"
-        id: create_tag
-      # - run: echo ${{ steps.create_tag.outputs.tagname }}
-      # - run: echo ${{ steps.create_tag.outputs.version }}
-      - name: Check if a new tag is created
-        run: "[[ '${{ steps.create_tag.outputs.tagname }}' ]]"
       - run: npm ci
       #- run: npm test
       - run: npm run build
