@@ -29,6 +29,14 @@ const displayEntity = computed(() => resolvedEntity.value || props.modelValue ||
 const label = computed(() => displayEntity.value['name']?.[0] || displayEntity.value['@id']);
 const dialogVisible = ref(false);
 
+function deriveEntityName(id) {
+  if (typeof id !== 'string' || id.length === 0) return 'New entity';
+  const trimmed = id.endsWith('/') ? id.slice(0, -1) : id;
+  const fromHash = trimmed.split('#').pop();
+  const fromPath = fromHash.split('/').pop();
+  return fromPath || id;
+}
+
 function showEntity() {
   const id = props.modelValue['@id'];
   if (resolvedEntity.value) {
@@ -44,6 +52,37 @@ function showEntity() {
 function openUrl() {
   dialogVisible.value = false;
   window.open(props.modelValue['@id'], '_blank');//.focus();
+}
+
+function createEntityFromLink() {
+  const id = props.modelValue?.['@id'];
+  if (!id || !state.crate) {
+    dialogVisible.value = false;
+    return;
+  }
+
+  const existing = state.crate.getEntity(id);
+  if (existing) {
+    dialogVisible.value = false;
+    state.showEntity(existing);
+    return;
+  }
+
+  const explicitType = props.modelValue?.['@type'];
+  const type = Array.isArray(explicitType)
+    ? explicitType.filter(Boolean)
+    : (explicitType ? [explicitType] : ['Thing']);
+
+  const item = {
+    '@id': id,
+    '@type': type,
+    name: deriveEntityName(id)
+  };
+
+  state.crate.addEntity(item, { replace: true, recurse: true });
+  state.refreshEntities?.();
+  dialogVisible.value = false;
+  state.showEntity(state.crate.getEntity(id) || item);
 }
 </script>
 
@@ -67,7 +106,7 @@ function openUrl() {
     <template #footer>
       <span class="dialog-footer">
         <el-button @click="dialogVisible = false">Cancel</el-button>
-        <el-button @click="dialogVisible = false">
+        <el-button @click="createEntityFromLink">
           Create new entity
         </el-button>
         <el-button type="primary" @click="openUrl">

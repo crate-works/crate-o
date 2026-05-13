@@ -1,8 +1,44 @@
 [
-  "https://language-research-technology.github.io/ro-crate-masp/profiles/ro-crate/profile-crate/ro-crate-metadata.json",
-  "https://language-research-technology.github.io/ro-crate-masp/profiles/schema-org/profile-crate/ro-crate-metadata.json",
-  "https://language-research-technology.github.io/ro-crate-masp/profiles/ldac/profile-crate/ro-crate-metadata.json",
-  "https://language-research-technology.github.io/ro-crate-masp/profiles/workflow/profile-crate/ro-crate-metadata.json",
-  "https://language-research-technology.github.io/ro-crate-masp/profiles/software/profile-crate/ro-crate-metadata.json",
-  "https://language-research-technology.github.io/ro-crate-masp/profiles/ro-crate-masp/profile-crate/ro-crate-metadata.json"
+  {
+    "maspCrateUrl": "/masp-profiles/ro-crate/profile-crate/ro-crate-metadata.json",
+    "name": "RO-Crate Profile",
+    "conformsTo": [
+      "https://language-research-technology.github.io/ro-crate-masp/profiles/ro-crate/profile-crate/"
+    ]
+  },
+  {
+    "maspCrateUrl": "/masp-profiles/schema-org/profile-crate/ro-crate-metadata.json",
+    "name": "RO-Crate + Schema.org Profile",
+    "conformsTo": [
+      "https://language-research-technology.github.io/ro-crate-masp/profiles/schema-org/profile-crate/"
+    ]
+  },
+  {
+    "maspCrateUrl": "/masp-profiles/ldac/profile-crate/ro-crate-metadata.json",
+    "name": "Language Data Commons (LDAC)",
+    "conformsTo": [
+      "https://w3id.org/ldac/profile#Collection"
+    ]
+  },
+  {
+    "maspCrateUrl": "/masp-profiles/workflow/profile-crate/ro-crate-metadata.json",
+    "name": "Workflow",
+    "conformsTo": [
+      "https://w3id.org/ro/workflow-crate/"
+    ]
+  },
+  {
+    "maspCrateUrl": "/masp-profiles/software/profile-crate/ro-crate-metadata.json",
+    "name": "Software",
+    "conformsTo": [
+      "https://w3id.org/ro/profiles/software/source-code/0.1"
+    ]
+  },
+  {
+    "maspCrateUrl": "/masp-profiles/ro-crate-masp/profile-crate/ro-crate-metadata.json",
+    "name": "RO-Crate MASP Profile",
+    "conformsTo": [
+      "https://language-research-technology.github.io/ro-crate-masp/profiles/ro-crate-masp/profile-crate/#profile"
+    ]
+  }
 ]

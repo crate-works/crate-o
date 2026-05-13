@@ -1,6 +1,6 @@
 {
   "name": "crate-o",
-  "version": "0.9.0-beta",
+  "version": "0.9.0-alpha.testing",
   "description": "A VueJS UI component to create and edit Research Object Crate (RO-Crate) metadata",
   "keywords": [
     "RO-Crate",
@@ -42,8 +42,13 @@
     "url": "https://github.com/Language-Research-Technology/crate-o"
   },
   "scripts": {
+    "refresh:masp": "node scripts/refresh-masp.js",
+    "predev": "npm run refresh:masp",
+    "prebuild": "npm run refresh:masp",
     "dev": "vite",
+    "dev:local": "CRATE_O_MASP_SOURCE=local npm run dev",
     "build": "vite build && cp README.md dist",
+    "build:local": "CRATE_O_MASP_SOURCE=local npm run build",
     "build:library": "vite build --mode library",
     "preview": "vite preview --port 5173",
     "test": "cypress run --component --headless",

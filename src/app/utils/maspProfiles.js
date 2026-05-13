@@ -33,10 +33,13 @@ function withDefaultLayout(editorHints, fallbackPropertyGroups = []) {
   };
 }
 
-function buildProfile(profileCrateJson, editorHints, fallbackPropertyGroups = []) {
+function buildProfile(profileCrateJson, editorHints, fallbackPropertyGroups = [], profileBaseUrl = null) {
   const crate = new ROCrate(profileCrateJson, { array: true, link: true });
   const effectiveHints = withDefaultLayout(editorHints, fallbackPropertyGroups);
   const validator = new MaspValidator(crate).setEditorHints(effectiveHints);
+  if (profileBaseUrl && validator?.setProfileBaseUrl) {
+    validator.setProfileBaseUrl(profileBaseUrl);
+  }
   validator.ensureParsed();
   const metadata = validator.getProfileMetadata?.() || {};
   const groupNames = (validator.getPropertyGroups?.() || []).map((g) => g?.name).filter(Boolean);
@@ -50,29 +53,55 @@ function buildProfile(profileCrateJson, editorHints, fallbackPropertyGroups = []
   return validator;
 }
 
-function deriveProfileNameFromUrl(metadataUrl) {
-  const match = metadataUrl.match(/\/profiles\/([^/]+)\/profile-crate\/ro-crate-metadata\.json$/);
-  const key = match?.[1] || 'profile';
-  const labels = {
-    'ro-crate': 'RO-Crate Profile',
-    'schema-org': 'RO-Crate + Schema.org Profile',
-    ldac: 'Language Data Commons (LDAC)',
-    workflow: 'Workflow',
-    software: 'Software',
-    'ro-crate-masp': 'RO-Crate MASP Profile',
-  };
-  return labels[key] || key;
+function buildProfileWithSourceUrl(profileCrateJson, editorHints, metadataUrl, fallbackPropertyGroups = []) {
+  return buildProfile(profileCrateJson, editorHints, fallbackPropertyGroups, metadataUrl);
 }
 
-function getEditorHintsUrl(metadataUrl) {
+function normalizeUriList(value) {
+  return Array.from(new Set(
+    (Array.isArray(value) ? value : [])
+      .filter((uri) => typeof uri === 'string')
+      .map((uri) => uri.trim())
+      .filter(Boolean)
+  ));
+}
+
+function normalizeProfileConfig(entry) {
+  if (typeof entry === 'string') {
+    return {
+      maspCrateUrl: entry,
+      name: entry,
+      conformsTo: [],
+    };
+  }
+  if (!entry || typeof entry !== 'object') {
+    return null;
+  }
+
+  const maspCrateUrl = typeof entry.maspCrateUrl === 'string' ? entry.maspCrateUrl.trim() : '';
+  const name = typeof entry.name === 'string' && entry.name.trim() ? entry.name.trim() : maspCrateUrl;
+  const conformsTo = normalizeUriList(entry.conformsTo);
+  if (!maspCrateUrl || !name) {
+    return null;
+  }
+
+  return {
+    ...entry,
+    maspCrateUrl,
+    name,
+    conformsTo,
+  };
+}
+
+function getEditorHintsUrl(maspCrateUrl) {
   try {
-    const url = new URL(metadataUrl);
+    const url = new URL(maspCrateUrl);
     url.search = '';
     url.hash = '';
     url.pathname = url.pathname.replace(/\/ro-crate-metadata\.json$/, '/crate-o-mode.json');
     return url.toString();
   } catch (_error) {
-    return metadataUrl.replace(/ro-crate-metadata\.json(?:\?.*)?$/, 'crate-o-mode.json');
+    return maspCrateUrl.replace(/ro-crate-metadata\.json(?:\?.*)?$/, 'crate-o-mode.json');
   }
 }
 
@@ -84,54 +113,63 @@ async function fetchJson(url) {
   return response.json();
 }
 
-function getConfiguredProfileMetadataUrls() {
-  if (Array.isArray(profileMetadataUrlsConfig)) {
-    return profileMetadataUrlsConfig.filter((url) => typeof url === 'string' && url);
+function getConfiguredProfiles() {
+  if (!Array.isArray(profileMetadataUrlsConfig)) {
+    return [];
   }
-  return [];
+  return profileMetadataUrlsConfig
+    .map(normalizeProfileConfig)
+    .filter(Boolean);
 }
 
-async function loadProfileDefinition(metadataUrl) {
-  const profileCrateJson = await fetchJson(metadataUrl);
+async function loadProfileDefinition(profileConfig) {
+  const profileCrateJson = await fetchJson(profileConfig.maspCrateUrl);
 
-  const editorHintsUrl = getEditorHintsUrl(metadataUrl);
+  const editorHintsUrl = getEditorHintsUrl(profileConfig.maspCrateUrl);
   let editorHints = {};
   try {
     editorHints = await fetchJson(editorHintsUrl);
   } catch (error) {
-    profileDebug('loadEditorHintsFailed', { metadataUrl, editorHintsUrl, message: error?.message });
+    profileDebug('loadEditorHintsFailed', { metadataUrl: profileConfig.maspCrateUrl, editorHintsUrl, message: error?.message });
   }
 
-  return { metadataUrl, profileCrateJson, editorHints };
+  return { ...profileConfig, profileCrateJson, editorHints };
 }
 
 async function loadProfilesFromConfig() {
-  const metadataUrls = getConfiguredProfileMetadataUrls();
+  const profileConfigs = getConfiguredProfiles();
 
-  const schemaOrgMetadataUrl =
-    metadataUrls.find((url) => url.includes('/schema-org/')) ||
-    'https://language-research-technology.github.io/ro-crate-masp/profiles/schema-org/profile-crate/ro-crate-metadata.json';
+  const schemaOrgProfileConfig =
+    profileConfigs.find((profile) => profile.name === 'RO-Crate + Schema.org Profile') ||
+    profileConfigs.find((profile) => profile.maspCrateUrl.includes('/schema-org/')) ||
+    null;
 
   let schemaOrgProfile = null;
-  try {
-    const schemaOrgDefinition = await loadProfileDefinition(schemaOrgMetadataUrl);
-    schemaOrgProfile = buildProfile(schemaOrgDefinition.profileCrateJson, schemaOrgDefinition.editorHints);
-  } catch (error) {
-    profileDebug('loadSchemaOrgFailed', { metadataUrl: schemaOrgMetadataUrl, message: error?.message });
+  if (schemaOrgProfileConfig) {
+    try {
+      const schemaOrgDefinition = await loadProfileDefinition(schemaOrgProfileConfig);
+      schemaOrgProfile = buildProfileWithSourceUrl(
+        schemaOrgDefinition.profileCrateJson,
+        schemaOrgDefinition.editorHints,
+        schemaOrgDefinition.maspCrateUrl
+      );
+    } catch (error) {
+      profileDebug('loadSchemaOrgFailed', { metadataUrl: schemaOrgProfileConfig.maspCrateUrl, message: error?.message });
+    }
   }
 
   const schemaOrgFallbackGroups = schemaOrgProfile?.getPropertyGroups?.() || [];
 
-  const lazyProfiles = metadataUrls.map((metadataUrl) => {
-    if (schemaOrgProfile && metadataUrl === schemaOrgMetadataUrl) {
+  const lazyProfiles = profileConfigs.map((profileConfig) => {
+    if (schemaOrgProfile && profileConfig.maspCrateUrl === schemaOrgProfileConfig?.maspCrateUrl) {
       return schemaOrgProfile;
     }
 
     let loadedProfile = null;
     let loadingPromise = null;
     const metadata = {
-      name: deriveProfileNameFromUrl(metadataUrl),
-      description: metadataUrl,
+      name: profileConfig.name,
+      description: profileConfig.maspCrateUrl,
     };
 
     const ensureLoaded = async () => {
@@ -139,11 +177,12 @@ async function loadProfilesFromConfig() {
         return loadedProfile;
       }
       if (!loadingPromise) {
-        loadingPromise = loadProfileDefinition(metadataUrl)
+        loadingPromise = loadProfileDefinition(profileConfig)
           .then((definition) => {
-            loadedProfile = buildProfile(
+            loadedProfile = buildProfileWithSourceUrl(
               definition.profileCrateJson,
               definition.editorHints,
+              definition.maspCrateUrl,
               schemaOrgFallbackGroups
             );
             const loadedMetadata = loadedProfile.getProfileMetadata?.() || {};
@@ -168,16 +207,47 @@ async function loadProfilesFromConfig() {
         const loadedMetadata = loadedProfile.getProfileMetadata() || {};
         return {
           ...loadedMetadata,
-          // Keep a stable profile name so selection continues to resolve after lazy loading.
           name: metadata.name,
           description: loadedMetadata.description || metadata.description,
         };
+      },
+      getEnabledClasses() {
+        return loadedProfile?.getEnabledClasses?.() || [];
+      },
+      getLookups() {
+        return loadedProfile?.getLookups?.() || {};
+      },
+      getClassDefinition(type) {
+        return loadedProfile?.getClassDefinition?.(type) || null;
       },
       getPropertyGroups() {
         return loadedProfile?.getPropertyGroups?.() || [];
       },
       getConformsToUris() {
-        return loadedProfile?.getConformsToUris?.() || [];
+        return profileConfig.conformsTo.length > 0
+          ? profileConfig.conformsTo
+          : (loadedProfile?.getConformsToUris?.() || []);
+      },
+      getProfileUri() {
+        return profileConfig.conformsTo[0] || loadedProfile?.getProfileUri?.() || null;
+      },
+      getProfileEntity() {
+        const loadedEntity = loadedProfile?.getProfileEntity?.() || null;
+        if (loadedEntity) {
+          return loadedEntity;
+        }
+
+        const profileUri = profileConfig.conformsTo[0] || null;
+        if (!profileUri) {
+          return null;
+        }
+
+        return {
+          '@id': profileUri,
+          '@type': ['CreativeWork', 'Profile'],
+          name: profileConfig.name,
+          url: profileConfig.maspCrateUrl.replace(/ro-crate-metadata\.json(?:\?.*)?$/, ''),
+        };
       },
       async validateCrate(crate) {
         const profile = await ensureLoaded();

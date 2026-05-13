@@ -250,12 +250,20 @@ function replaceConformTos() {
   emit('update:modelValue', entity, 'conformsTo', data.pendingConformsTo);
   closeConformsToDialog();
   data.conformsToRefresh++;
+  // Switch to viewing the root data entity
+  if (state._showEntity && state.crate?.rootDataset) {
+    state._showEntity(state.crate.rootDataset);
+  }
 }
 
 function addMissingConformTos() {
   addConformTos(data.pendingConformsTo);
   closeConformsToDialog();
   data.conformsToRefresh++;
+  // Switch to viewing the root data entity
+  if (state._showEntity && state.crate?.rootDataset) {
+    state._showEntity(state.crate.rootDataset);
+  }
 }
 
 function closeConformsToDialog() {
@@ -296,7 +304,7 @@ function closeConformsToDialog() {
             class="bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4">
             This RO-Crate does not indicate conformance with the selected profile - click here to add it:&nbsp;
             <el-button size="small" type="primary" :icon="Plus" @click="promptAddConformTos(checkConformsTo())">
-              Add the missing conformsTo(s):&nbsp;<span v-for="c of checkConformsTo()">{{ c?.['@id'] }}</span>
+              Add the missing conformsTo(s):&nbsp;<span v-for="(c, index) of checkConformsTo()" :key="c?.['@id'] || index">{{ c?.['@id'] }}<span v-if="index < checkConformsTo().length - 1">, </span></span>
             </el-button>
           </el-row>
         </div>

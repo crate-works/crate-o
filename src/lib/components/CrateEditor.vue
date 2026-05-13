@@ -230,6 +230,12 @@ const profileContextualEntities = {
     'name': 'Language Data Commons Profile',
     'url': 'https://w3id.org/ldac/profile/'
   },
+  'https://w3id.org/ldac/profile#Collection': {
+    '@id': 'https://w3id.org/ldac/profile#Collection',
+    '@type': ['CreativeWork', 'Profile'],
+    'name': 'Language Data Commons RO-Crate Profile: Collection',
+    'url': 'https://w3id.org/ldac/profile/'
+  },
   'https://language-research-technology.github.io/ro-crate-masp/profiles/ro-crate/profile-crate/#profile': {
     '@id': 'https://language-research-technology.github.io/ro-crate-masp/profiles/ro-crate/profile-crate/#profile',
     '@type': ['CreativeWork', 'Profile'],
@@ -248,8 +254,8 @@ const profileContextualEntities = {
     'name': 'Software Profile',
     'url': 'https://language-research-technology.github.io/ro-crate-masp/profiles/software/profile-crate/'
   },
-  'https://w3id.org/ro/workflow-crate/#profile': {
-    '@id': 'https://w3id.org/ro/workflow-crate/#profile',
+  'https://w3id.org/workflowhub/workflow-ro-crate/1.0': {
+    '@id': 'https://w3id.org/workflowhub/workflow-ro-crate/1.0',
     '@type': ['CreativeWork', 'Profile'],
     'name': 'Workflow Profile',
     'url': 'https://w3id.org/ro/workflow-crate/'

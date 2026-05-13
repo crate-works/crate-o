@@ -104,6 +104,126 @@ function openProfileDocumentation(url) {
   window.open(url, '_blank', 'noopener,noreferrer');
 }
 
+function getProfileConformsToCandidates(profileInstance) {
+  const candidates = new Set();
+  // Use validator order first: canonical URI should be first, aliases after.
+  for (const uri of profileInstance?.getConformsToUris?.() || []) {
+    if (typeof uri === 'string' && uri) {
+      candidates.add(uri);
+    }
+  }
+  const profileUri = profileInstance?.getProfileUri?.();
+  if (typeof profileUri === 'string' && profileUri) {
+    candidates.add(profileUri);
+  }
+  return Array.from(candidates);
+}
+
+function getCrateConformsToIds(roc) {
+  return (roc?.rootDataset?.['conformsTo'] || [])
+    .map((ct) => ct?.['@id'])
+    .filter(Boolean);
+}
+
+function ensureProfileContextEntity(roc, selectedProfile) {
+  const contextualEntity = selectedProfile?.getProfileEntity?.();
+  if (!contextualEntity || !contextualEntity['@id']) {
+    return false;
+  }
+
+  if (!roc.getEntity(contextualEntity['@id'])) {
+    roc.addEntity({ ...contextualEntity }, { replace: false, recurse: true });
+    return true;
+  }
+  return false;
+}
+
+function setRootConformsTo(roc, ids) {
+  const values = ids.map((id) => ({ '@id': id }));
+  const rootId = roc?.rootId || roc?.rootDataset?.['@id'] || './';
+  if (typeof roc?.setProperty === 'function') {
+    roc.setProperty(rootId, 'conformsTo', values);
+    return;
+  }
+  roc.rootDataset['conformsTo'] = values;
+}
+
+async function reconcileConformsToForSelectedProfile(roc, selectedProfile, { interactive = false } = {}) {
+  if (!roc || !selectedProfile) {
+    return false;
+  }
+
+  if (selectedProfile?.ensureLoaded) {
+    try {
+      await selectedProfile.ensureLoaded();
+    } catch (error) {
+      profileDebug('ensureLoadedFailedForConformsToReconcile', {
+        name: profileMeta(selectedProfile).name,
+        message: error?.message
+      });
+    }
+  }
+
+  const profileConformsTo = getProfileConformsToCandidates(selectedProfile);
+  if (profileConformsTo.length === 0) {
+    data.conformsToNotice = null;
+    return false;
+  }
+
+  const targetUri = profileConformsTo[0];
+  const crateConformsTo = getCrateConformsToIds(roc);
+  const alreadyHasTarget = crateConformsTo.includes(targetUri);
+
+  if (alreadyHasTarget) {
+    // If URI is present, quietly ensure contextual profile entity exists.
+    data.conformsToNotice = null;
+    const added = ensureProfileContextEntity(roc, selectedProfile);
+    return added;
+  }
+
+  if (!interactive) {
+    return false;
+  }
+
+  const selectedProfileName = profileMeta(selectedProfile).name || 'Selected profile';
+  data.conformsToNotice = {
+    profileName: selectedProfileName,
+    targetUri,
+    aliasUris: profileConformsTo.slice(1),
+    currentUris: crateConformsTo,
+  };
+  return false;
+}
+
+function applyConformsToNoticeAction(action) {
+  const notice = data.conformsToNotice;
+  if (!notice || !editor?.crate) {
+    return;
+  }
+
+  const selectedProfile = profile.value;
+  const current = getCrateConformsToIds(editor.crate);
+
+  if (action === 'replace') {
+    setRootConformsTo(editor.crate, [notice.targetUri]);
+    ensureProfileContextEntity(editor.crate, selectedProfile);
+    data.conformsToNotice = null;
+    editor.refresh?.();
+    return;
+  }
+
+  if (action === 'add') {
+    const next = Array.from(new Set([...current, notice.targetUri]));
+    setRootConformsTo(editor.crate, next);
+    ensureProfileContextEntity(editor.crate, selectedProfile);
+    data.conformsToNotice = null;
+    editor.refresh?.();
+    return;
+  }
+
+  data.conformsToNotice = null;
+}
+
 const data = shallowReactive({
   /** @type {?FileSystemDirectoryHandle} */
   dirHandle: null,
@@ -122,6 +242,7 @@ const data = shallowReactive({
   autoDetectedProfileKey: null,
   loading: false,
   modeError: [],
+  conformsToNotice: null,
   validationResult: {},
   showDialog: false,
   dialogTitle: '',
@@ -353,8 +474,8 @@ const commands = {
   loadProfile() {
     data.showDialog = true;
     data.dialogContent = null;
-    data.dialogTitle = 'Profile loading is URL-configured';
-    data.modeError = [{ message: 'This build uses MASP profile-crates from configured URLs (see crate-o-masp-config.json).' }];
+    data.dialogTitle = 'Profile loading is config-driven';
+    data.modeError = [{ message: 'This build uses MASP profile records from crate-o-masp-config.json.' }];
   },
 
   async open() {
@@ -705,14 +826,14 @@ async function detectProfile(roc) {
 
   let matchedProfile = null;
   for (const p of data.profiles) {
-    let conformsToProfile = p?.getConformsToUris?.() || [];
+    let conformsToProfile = getProfileConformsToCandidates(p);
     if (conformsToProfile.length === 0 && p?.ensureLoaded) {
       try {
         await p.ensureLoaded();
       } catch (error) {
         profileDebug('ensureLoadedFailed', { name: profileMeta(p).name, message: error?.message });
       }
-      conformsToProfile = p?.getConformsToUris?.() || [];
+      conformsToProfile = getProfileConformsToCandidates(p);
     }
 
     if (conformsToCrate.some(ct => conformsToProfile.includes(ct['@id']))) {
@@ -774,6 +895,12 @@ async function ready(roc, refresh) {
     selectedProfileSource: data.selectedProfileSource
   });
 
+  // Apply silent profile contextual entity fix-ups after auto profile resolution.
+  const changedBySilentFix = await reconcileConformsToForSelectedProfile(roc, profile.value, { interactive: false });
+  if (changedBySilentFix) {
+    refresh();
+  }
+
   data.loading = false;
   console.log('ready');
   editor.crate = roc;
@@ -792,10 +919,30 @@ function handleProfileVisibilityChange(visible) {
   }
 }
 
-function handleProfileChange() {
-  if (data.profilePickerInteracted && data.selectedProfile !== null && data.selectedProfile !== undefined) {
-    data.selectedProfileSource = 'user';
-    data.profilePickerInteracted = false;
+function handleProfileChange(selectedProfileName) {
+  if (selectedProfileName === null || selectedProfileName === undefined) {
+    return;
+  }
+
+  data.selectedProfileSource = 'user';
+  data.profilePickerInteracted = false;
+
+  const selectedProfile = data.profiles.find((p) => {
+    const name = profileMeta(p).name;
+    return name === selectedProfileName && !hiddenProfileNames.has(name);
+  });
+
+  if (editor?.crate && selectedProfile) {
+    data.conformsToNotice = null;
+    reconcileConformsToForSelectedProfile(editor.crate, selectedProfile, { interactive: true })
+      .then((changed) => {
+        if (changed) {
+          editor.refresh?.();
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to reconcile conformsTo for selected profile', error);
+      });
   }
 }
 
@@ -845,6 +992,7 @@ watch(() => data.profiles, (profiles) => {
   if (hiddenProfileNames.has(data.selectedProfile)) {
     data.selectedProfile = null;
     data.selectedProfileSource = 'none';
+    data.conformsToNotice = null;
   }
   profileDebug('profilesHydratedInView', (profiles || []).map((p, index) => {
     const meta = profileMeta(p);
@@ -933,6 +1081,40 @@ watch(() => data.profiles, (profiles) => {
     </el-row>
   </div>
   <template v-if="data.crate">
+    <el-alert
+      v-if="data.conformsToNotice"
+      class="validation-warnings"
+      type="warning"
+      show-icon
+      :closable="false"
+      title="Selected profile does not match crate conformsTo">
+      <template #default>
+        <div class="ml-2 text-sm">
+          <p>
+            Profile:
+            <span class="font-semibold">{{ data.conformsToNotice.profileName }}</span>
+          </p>
+          <p class="mt-1">
+            Canonical URI:
+            <span class="font-mono">{{ data.conformsToNotice.targetUri }}</span>
+          </p>
+          <p v-if="data.conformsToNotice.aliasUris?.length" class="mt-1">
+            Accepted aliases:
+            <span class="font-mono">{{ data.conformsToNotice.aliasUris.join(', ') }}</span>
+          </p>
+          <p class="mt-1">
+            Current crate URIs:
+            <span v-if="data.conformsToNotice.currentUris?.length" class="font-mono">{{ data.conformsToNotice.currentUris.join(', ') }}</span>
+            <span v-else>(none)</span>
+          </p>
+          <div class="mt-3 flex gap-2">
+            <el-button size="small" type="warning" @click="applyConformsToNoticeAction('replace')">Replace conformsTo</el-button>
+            <el-button size="small" @click="applyConformsToNoticeAction('add')">Add as additional conformsTo</el-button>
+            <el-button size="small" type="info" @click="applyConformsToNoticeAction('cancel')">Cancel</el-button>
+          </div>
+        </div>
+      </template>
+    </el-alert>
     <el-alert class="validation-warnings" v-if="data.validationResultDialog" type="warning"
       @close="data.validationResultDialog = false">
       <el-collapse class="ml-5 mr-10 min-w-96" role="alert">
@@ -997,7 +1179,7 @@ watch(() => data.profiles, (profiles) => {
           </svg>
         </el-button>
       </span> -->
-    <CrateEditor :key="`profile-${data.selectedProfile}`" :crate="data.crate" :mode="profile" :entity-id="data.entityId" :property-id="data.propertyId"
+    <CrateEditor v-if="profile && !data.profileLoading" :key="`profile-${data.selectedProfile}`" :crate="data.crate" :mode="profile" :entity-id="data.entityId" :property-id="data.propertyId"
       :load-file="getFile" @update:entity-id="updateEntityId" @ready="ready">
     </CrateEditor>
     <SpreadSheet v-model:crate="data.crate" :buffer="data.spreadSheetBuffer" />

@@ -30,6 +30,11 @@ export async function loadMaspProfile(profilePath) {
     const rootTypes = Array.isArray(rootDatasetEntity?.['@type'])
       ? rootDatasetEntity['@type']
       : [rootDatasetEntity?.['@type']];
+    const conformsToValues = Array.isArray(rootDatasetEntity?.conformsTo)
+      ? rootDatasetEntity.conformsTo
+      : rootDatasetEntity?.conformsTo
+        ? [rootDatasetEntity.conformsTo]
+        : [];
 
     // Try to load crate-o-mode.json for UI configuration
     let modeConfig = {};
@@ -54,7 +59,7 @@ export async function loadMaspProfile(profilePath) {
       // Root data entity configuration
       rootDataset: {
         types: rootTypes,
-        conformsTo: modeConfig.conformsToUri || [],
+        conformsTo: conformsToValues.map((item) => item?.['@id'] || item).filter(Boolean),
       },
 
       // UI configuration from crate-o-mode

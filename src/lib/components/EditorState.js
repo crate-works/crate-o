@@ -178,7 +178,7 @@ export class EditorState {
 
   getConformsToUris() {
     if (!this.profile) return [];
-    return this.profile.getConformsToUris ? this.profile.getConformsToUris() : (this.profile.conformsToUri || []);
+    return this.profile.getConformsToUris ? this.profile.getConformsToUris() : [];
   }
 
   showEntity(e) {
