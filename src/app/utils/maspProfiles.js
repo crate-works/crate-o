@@ -174,7 +174,7 @@ async function loadProfilesFromConfig() {
       schemaOrgProfile = buildProfileWithSourceUrl(
         schemaOrgDefinition.profileCrateJson,
         schemaOrgDefinition.editorHints,
-        schemaOrgDefinition.maspCrateUrl
+        schemaOrgDefinition.resolvedMaspCrateUrl || schemaOrgDefinition.maspCrateUrl
       );
     } catch (error) {
       profileDebug('loadSchemaOrgFailed', { metadataUrl: schemaOrgProfileConfig.maspCrateUrl, message: error?.message });
@@ -205,7 +205,7 @@ async function loadProfilesFromConfig() {
             loadedProfile = buildProfileWithSourceUrl(
               definition.profileCrateJson,
               definition.editorHints,
-              definition.maspCrateUrl,
+              definition.resolvedMaspCrateUrl || definition.maspCrateUrl,
               schemaOrgFallbackGroups
             );
             const loadedMetadata = loadedProfile.getProfileMetadata?.() || {};
