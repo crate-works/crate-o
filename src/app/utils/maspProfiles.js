@@ -14,6 +14,22 @@ function profileDebug(...args) {
   console.log('[crate-o:profile]', ...args);
 }
 
+function resolveConfiguredUrl(url) {
+  if (typeof url !== 'string' || !url.trim()) {
+    return url;
+  }
+
+  // Keep absolute/protocol-relative URLs unchanged.
+  if (/^[a-z][a-z\d+\-.]*:/i.test(url) || url.startsWith('//')) {
+    return url;
+  }
+
+  const baseUrl = import.meta?.env?.BASE_URL || '/';
+  const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+  const normalizedPath = url.replace(/^\/+/, '');
+  return `${normalizedBase}${normalizedPath}`;
+}
+
 function hasLayoutGroups(editorHints) {
   const propertyGroups = editorHints?.propertyGroups;
   return Array.isArray(propertyGroups) && propertyGroups.length > 0;
@@ -79,6 +95,7 @@ function normalizeProfileConfig(entry) {
   }
 
   const maspCrateUrl = typeof entry.maspCrateUrl === 'string' ? entry.maspCrateUrl.trim() : '';
+  const resolvedMaspCrateUrl = resolveConfiguredUrl(maspCrateUrl);
   const name = typeof entry.name === 'string' && entry.name.trim() ? entry.name.trim() : maspCrateUrl;
   const conformsTo = normalizeUriList(entry.conformsTo);
   if (!maspCrateUrl || !name) {
@@ -88,6 +105,7 @@ function normalizeProfileConfig(entry) {
   return {
     ...entry,
     maspCrateUrl,
+    resolvedMaspCrateUrl,
     name,
     conformsTo,
   };
@@ -123,14 +141,19 @@ function getConfiguredProfiles() {
 }
 
 async function loadProfileDefinition(profileConfig) {
-  const profileCrateJson = await fetchJson(profileConfig.maspCrateUrl);
+  const profileCrateJson = await fetchJson(profileConfig.resolvedMaspCrateUrl || profileConfig.maspCrateUrl);
 
-  const editorHintsUrl = getEditorHintsUrl(profileConfig.maspCrateUrl);
+  const editorHintsUrl = getEditorHintsUrl(profileConfig.resolvedMaspCrateUrl || profileConfig.maspCrateUrl);
   let editorHints = {};
   try {
     editorHints = await fetchJson(editorHintsUrl);
   } catch (error) {
-    profileDebug('loadEditorHintsFailed', { metadataUrl: profileConfig.maspCrateUrl, editorHintsUrl, message: error?.message });
+    profileDebug('loadEditorHintsFailed', {
+      metadataUrl: profileConfig.maspCrateUrl,
+      resolvedMetadataUrl: profileConfig.resolvedMaspCrateUrl,
+      editorHintsUrl,
+      message: error?.message,
+    });
   }
 
   return { ...profileConfig, profileCrateJson, editorHints };
@@ -246,7 +269,8 @@ async function loadProfilesFromConfig() {
           '@id': profileUri,
           '@type': ['CreativeWork', 'Profile'],
           name: profileConfig.name,
-          url: profileConfig.maspCrateUrl.replace(/ro-crate-metadata\.json(?:\?.*)?$/, ''),
+          url: (profileConfig.resolvedMaspCrateUrl || profileConfig.maspCrateUrl)
+            .replace(/ro-crate-metadata\.json(?:\?.*)?$/, ''),
         };
       },
       async validateCrate(crate) {
