@@ -93,7 +93,7 @@ export default defineConfig(({ mode }) => ({
   esbuild: {
     drop: mode !== 'development' ? ['console', 'debugger'] : [],
   },
-  base: './',
+  base: process.env.NODE_ENV === 'production' ? '/crate-o/' : './',
   build: build[mode],
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version)
