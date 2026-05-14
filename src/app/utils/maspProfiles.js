@@ -24,10 +24,39 @@ function resolveConfiguredUrl(url) {
     return url;
   }
 
-  const baseUrl = import.meta?.env?.BASE_URL || '/';
-  const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+  // Build a stable base path for both local dev and deployed sub-paths.
+  // Some environments can surface malformed BASE_URL values (for example, //:5173/).
+  const rawBaseUrl = typeof import.meta?.env?.BASE_URL === 'string'
+    ? import.meta.env.BASE_URL.trim()
+    : '';
+
+  let basePath = '/';
+  if (rawBaseUrl && rawBaseUrl !== '.' && rawBaseUrl !== './') {
+    if (!/^[a-z][a-z\d+\-.]*:/i.test(rawBaseUrl) && !rawBaseUrl.startsWith('//')) {
+      basePath = rawBaseUrl;
+    } else {
+      try {
+        basePath = new URL(rawBaseUrl, (typeof window !== 'undefined' ? window.location.origin : 'http://localhost')).pathname || '/';
+      } catch (_error) {
+        basePath = '/';
+      }
+    }
+  }
+
+  if (!basePath.startsWith('/')) {
+    basePath = `/${basePath}`;
+  }
+  if (!basePath.endsWith('/')) {
+    basePath = `${basePath}/`;
+  }
+
   const normalizedPath = url.replace(/^\/+/, '');
-  return `${normalizedBase}${normalizedPath}`;
+  const resolvedPath = `${basePath}${normalizedPath}`.replace(/\/+/g, '/');
+
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return `${window.location.origin}${resolvedPath}`;
+  }
+  return resolvedPath;
 }
 
 function hasLayoutGroups(editorHints) {
