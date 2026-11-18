@@ -58,6 +58,7 @@
     "serve": "npm run build && npm run preview"
   },
   "dependencies": {
+    "@crate-works/ro-crate-masp-validator": "^0.1.0",
     "@element-plus/icons-vue": "^2.3.1",
     "leaflet": "^1.9.4",
     "leaflet-editable": "^1.2.0",
