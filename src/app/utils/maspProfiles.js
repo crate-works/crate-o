@@ -1,5 +1,5 @@
 import { ROCrate } from 'ro-crate';
-import * as maspValidatorModule from 'ro-crate-maps/lib/masp-validator.js';
+import * as maspValidatorModule from '@crate-works/ro-crate-masp-validator/lib/masp-validator.js';
 import profileMetadataUrlsConfig from '../../../crate-o-masp-config.json';
 
 const { MaspValidator } = maspValidatorModule;
