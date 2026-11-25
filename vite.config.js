@@ -18,7 +18,7 @@ const build = {
   _all: {
     rollupOptions: {},
     commonjsOptions: {
-      include: [/ro-crate-excel/, /ro-crate-maps/, /node_modules/],
+      include: [/ro-crate-excel/, /ro-crate-masp-validator/, /node_modules/],
       transformMixedEsModules: true
     },
   },
@@ -46,7 +46,7 @@ const disableMaspCliEntrypoint = {
   name: 'disable-masp-cli-entrypoint',
   enforce: 'pre',
   transform(code, id) {
-    if (!id.includes('/ro-crate-maps/lib/masp-validator.js')) {
+    if (!id.includes('/ro-crate-masp-validator/lib/masp-validator.js')) {
       return null;
     }
     return code.replace('if (require.main === module) {', 'if (false && require.main === module) {');
@@ -76,7 +76,7 @@ export default defineConfig(({ mode }) => ({
       'ro-crate-excel',
       'leaflet',
       'ro-crate-html',
-      'ro-crate-maps/lib/masp-validator.js'
+      '@crate-works/ro-crate-masp-validator/lib/masp-validator.js'
     ]
   },
   server: {

@@ -236,18 +236,39 @@ const profileContextualEntities = {
     'name': 'Language Data Commons RO-Crate Profile: Collection',
     'url': 'https://w3id.org/ldac/profile/'
   },
+  'https://language-research-technology.github.io/ro-crate-masp-examples/profiles/ro-crate/profile-crate/#profile': {
+    '@id': 'https://language-research-technology.github.io/ro-crate-masp-examples/profiles/ro-crate/profile-crate/#profile',
+    '@type': ['CreativeWork', 'Profile'],
+    'name': 'RO-Crate Profile',
+    'url': 'https://language-research-technology.github.io/ro-crate-masp-examples/profiles/ro-crate/profile-crate/'
+  },
+  // Old URL, still declared by crates made before the examples moved
   'https://language-research-technology.github.io/ro-crate-masp/profiles/ro-crate/profile-crate/#profile': {
     '@id': 'https://language-research-technology.github.io/ro-crate-masp/profiles/ro-crate/profile-crate/#profile',
     '@type': ['CreativeWork', 'Profile'],
     'name': 'RO-Crate Profile',
     'url': 'https://language-research-technology.github.io/ro-crate-masp/profiles/ro-crate/profile-crate/'
   },
+  'https://language-research-technology.github.io/ro-crate-masp-examples/profiles/schema-org/profile-crate/#profile': {
+    '@id': 'https://language-research-technology.github.io/ro-crate-masp-examples/profiles/schema-org/profile-crate/#profile',
+    '@type': ['CreativeWork', 'Profile'],
+    'name': 'Schema.org Profile',
+    'url': 'https://language-research-technology.github.io/ro-crate-masp-examples/profiles/schema-org/profile-crate/'
+  },
+  // Old URL, still declared by crates made before the examples moved
   'https://language-research-technology.github.io/ro-crate-masp/profiles/schema-org/profile-crate/#profile': {
     '@id': 'https://language-research-technology.github.io/ro-crate-masp/profiles/schema-org/profile-crate/#profile',
     '@type': ['CreativeWork', 'Profile'],
     'name': 'Schema.org Profile',
     'url': 'https://language-research-technology.github.io/ro-crate-masp/profiles/schema-org/profile-crate/'
   },
+  'https://language-research-technology.github.io/ro-crate-masp-examples/profiles/software/profile-crate/#profile': {
+    '@id': 'https://language-research-technology.github.io/ro-crate-masp-examples/profiles/software/profile-crate/#profile',
+    '@type': ['CreativeWork', 'Profile'],
+    'name': 'Software Profile',
+    'url': 'https://language-research-technology.github.io/ro-crate-masp-examples/profiles/software/profile-crate/'
+  },
+  // Old URL, still declared by crates made before the examples moved
   'https://language-research-technology.github.io/ro-crate-masp/profiles/software/profile-crate/#profile': {
     '@id': 'https://language-research-technology.github.io/ro-crate-masp/profiles/software/profile-crate/#profile',
     '@type': ['CreativeWork', 'Profile'],

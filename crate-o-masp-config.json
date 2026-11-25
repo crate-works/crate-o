@@ -1,34 +1,36 @@
 [
   {
-    "maspCrateUrl": "https://language-research-technology.github.io/ro-crate-masp/profiles/ro-crate/profile-crate/ro-crate-metadata.json",
+    "maspCrateUrl": "https://language-research-technology.github.io/ro-crate-masp-examples/profiles/ro-crate/profile-crate/ro-crate-metadata.json",
     "name": "RO-Crate Profile",
     "conformsTo": [
+      "https://language-research-technology.github.io/ro-crate-masp-examples/profiles/ro-crate/profile-crate/",
       "https://language-research-technology.github.io/ro-crate-masp/profiles/ro-crate/profile-crate/"
     ]
   },
   {
-    "maspCrateUrl": "https://language-research-technology.github.io/ro-crate-masp/profiles/schema-org/profile-crate/ro-crate-metadata.json",
+    "maspCrateUrl": "https://language-research-technology.github.io/ro-crate-masp-examples/profiles/schema-org/profile-crate/ro-crate-metadata.json",
     "name": "RO-Crate + Schema.org Profile",
     "conformsTo": [
+      "https://language-research-technology.github.io/ro-crate-masp-examples/profiles/schema-org/profile-crate/",
       "https://language-research-technology.github.io/ro-crate-masp/profiles/schema-org/profile-crate/"
     ]
   },
   {
-    "maspCrateUrl": "https://language-research-technology.github.io/ro-crate-masp/profiles/ldac/profile-crate/ro-crate-metadata.json",
+    "maspCrateUrl": "https://language-research-technology.github.io/ro-crate-masp-examples/profiles/ldac/profile-crate/ro-crate-metadata.json",
     "name": "Language Data Commons (LDAC)",
     "conformsTo": [
       "https://w3id.org/ldac/profile#Collection"
     ]
   },
   {
-    "maspCrateUrl": "https://language-research-technology.github.io/ro-crate-masp/profiles/workflow/profile-crate/ro-crate-metadata.json",
+    "maspCrateUrl": "https://language-research-technology.github.io/ro-crate-masp-examples/profiles/workflow/profile-crate/ro-crate-metadata.json",
     "name": "Workflow",
     "conformsTo": [
       "https://w3id.org/ro/workflow-crate/"
     ]
   },
   {
-    "maspCrateUrl": "https://language-research-technology.github.io/ro-crate-masp/profiles/software/profile-crate/ro-crate-metadata.json",
+    "maspCrateUrl": "https://language-research-technology.github.io/ro-crate-masp-examples/profiles/software/profile-crate/ro-crate-metadata.json",
     "name": "Software",
     "conformsTo": [
       "https://w3id.org/ro/profiles/software/source-code/0.1"
