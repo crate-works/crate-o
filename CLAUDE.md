@@ -17,7 +17,7 @@ Crate-O is a browser-based editor for [RO-Crate](https://www.researchobject.org/
 
 ### 2) Minimize crate-o specific validation logic
 
-- Crate-O should delegate validation behavior to the MASP validator implementation from `ro-crate-masp`.
+- Crate-O should delegate validation behavior to the MASP validator, `@crate-works/ro-crate-masp-validator` (crate-works/ro-crate-masp-validator).
 - Do not duplicate or fork validation rules in UI code unless there is a clear UI-only presentation concern.
 - When adding validation behavior, implement it in the shared validator first, then consume it from Crate-O.
 
